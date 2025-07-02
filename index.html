@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Plate Sequence Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #667eea 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(102, 126, 234, 0.2) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .floating-symbols {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .math-symbol {
+            position: absolute;
+            font-size: 2em;
+            color: rgba(102, 126, 234, 0.15);
+            font-weight: 300;
+            animation: float 15s infinite linear;
+        }
+
+        .math-symbol:nth-child(1) { left: 10%; animation-delay: 0s; font-size: 1.8em; }
+        .math-symbol:nth-child(2) { left: 20%; animation-delay: -2s; font-size: 2.2em; }
+        .math-symbol:nth-child(3) { left: 30%; animation-delay: -4s; font-size: 1.6em; }
+        .math-symbol:nth-child(4) { left: 40%; animation-delay: -6s; font-size: 2.4em; }
+        .math-symbol:nth-child(5) { left: 50%; animation-delay: -8s; font-size: 1.9em; }
+        .math-symbol:nth-child(6) { left: 60%; animation-delay: -10s; font-size: 2.1em; }
+        .math-symbol:nth-child(7) { left: 70%; animation-delay: -12s; font-size: 1.7em; }
+        .math-symbol:nth-child(8) { left: 80%; animation-delay: -14s; font-size: 2.3em; }
+        .math-symbol:nth-child(9) { left: 90%; animation-delay: -16s; font-size: 1.5em; }
+        .math-symbol:nth-child(10) { left: 15%; animation-delay: -18s; font-size: 2.0em; }
+        .math-symbol:nth-child(11) { left: 35%; animation-delay: -20s; font-size: 1.8em; }
+        .math-symbol:nth-child(12) { left: 55%; animation-delay: -22s; font-size: 2.2em; }
+        .math-symbol:nth-child(13) { left: 75%; animation-delay: -24s; font-size: 1.6em; }
+        .math-symbol:nth-child(14) { left: 85%; animation-delay: -26s; font-size: 2.4em; }
+        .math-symbol:nth-child(15) { left: 25%; animation-delay: -28s; font-size: 1.9em; }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) translateX(0px) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.15;
+            }
+            90% {
+                opacity: 0.15;
+            }
+            100% {
+                transform: translateY(-100px) translateX(50px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .math-symbol-static {
+            position: absolute;
+            font-size: 1.5em;
+            color: rgba(102, 126, 234, 0.08);
+            font-weight: 200;
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        .math-symbol-static:nth-child(16) { top: 15%; right: 5%; animation-delay: 0s; }
+        .math-symbol-static:nth-child(17) { top: 25%; left: 3%; animation-delay: 1s; }
+        .math-symbol-static:nth-child(18) { top: 45%; right: 8%; animation-delay: 2s; }
+        .math-symbol-static:nth-child(19) { top: 65%; left: 5%; animation-delay: 3s; }
+        .math-symbol-static:nth-child(20) { top: 75%; right: 3%; animation-delay: 4s; }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 0.05;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.15;
+                transform: scale(1.1);
+            }
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 25px;
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, 0.15),
+                0 0 0 1px rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            max-width: 700px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #667eea, #764ba2, #667eea);
+            border-radius: 25px;
+            z-index: -1;
+            opacity: 0.1;
+        }
+
+        h1 {
+            color: #1e3c72;
+            margin-bottom: 10px;
+            font-size: 2.8em;
+            font-weight: 700;
+            background: linear-gradient(135deg, #1e3c72, #667eea);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+        }
+
+        h1::before {
+            content: '🧮';
+            position: absolute;
+            left: -60px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.8em;
+            opacity: 0.7;
+        }
+
+        h1::after {
+            content: '🔢';
+            position: absolute;
+            right: -60px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.8em;
+            opacity: 0.7;
+        }
+
+        .subtitle {
+            color: #555;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+            line-height: 1.6;
+            padding: 15px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            border-radius: 15px;
+            border-left: 4px solid #667eea;
+            position: relative;
+        }
+
+        .subtitle::before {
+            content: '💡';
+            position: absolute;
+            left: -15px;
+            top: 15px;
+            font-size: 1.2em;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .input-section::before {
+            content: '🚗';
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5em;
+            z-index: 2;
+        }
+
+        label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px 20px 15px 60px;
+            font-size: 1.5em;
+            border: 3px solid rgba(102, 126, 234, 0.2);
+            border-radius: 15px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, rgba(248, 249, 250, 0.8), rgba(255, 255, 255, 0.9));
+            backdrop-filter: blur(10px);
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 
+                0 0 30px rgba(102, 126, 234, 0.3),
+                inset 0 2px 4px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .result-section {
+            background: linear-gradient(135deg, rgba(248, 249, 250, 0.9), rgba(233, 236, 239, 0.9));
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 30px 0;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid rgba(102, 126, 234, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .result-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(102, 126, 234, 0.05), transparent);
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        .result {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #333;
+            text-align: center;
+        }
+
+        .sequence-number {
+            color: #667eea;
+            font-size: 2.2em;
+            margin-top: 10px;
+        }
+
+        .calculation-steps {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+            text-align: left;
+            font-size: 0.9em;
+        }
+
+        .calc-step {
+            margin: 5px 0;
+            color: #555;
+            font-family: 'Courier New', monospace;
+            line-height: 1.4;
+        }
+
+        .examples {
+            background: linear-gradient(135deg, rgba(248, 249, 250, 0.9), rgba(255, 255, 255, 0.9));
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-top: 30px;
+            text-align: left;
+            border: 2px solid rgba(102, 126, 234, 0.1);
+            position: relative;
+        }
+
+        .examples::before {
+            content: '📊';
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 1.5em;
+            opacity: 0.7;
+        }
+
+        .examples h3 {
+            color: #1e3c72;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.4em;
+            background: linear-gradient(135deg, #1e3c72, #667eea);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .explanation {
+            background: linear-gradient(135deg, rgba(255, 248, 225, 0.9), rgba(255, 252, 240, 0.9));
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-top: 30px;
+            text-align: left;
+            border: 3px solid rgba(255, 193, 7, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .explanation::before {
+            content: '🎓';
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 2em;
+            opacity: 0.6;
+        }
+
+        .explanation::after {
+            content: '';
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(255, 193, 7, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .explanation h3 {
+            color: #1e3c72;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.5em;
+            background: linear-gradient(135deg, #1e3c72, #f57c00);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .explanation p {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1em;
+            line-height: 1.6;
+        }
+
+        .step {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 249, 250, 0.9));
+            backdrop-filter: blur(5px);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 5px solid #667eea;
+            position: relative;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .step:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .step h4 {
+            color: #1e3c72;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .step:nth-child(2) h4::before { content: '🔤'; }
+        .step:nth-child(3) h4::before { content: '🖥️'; }
+        .step:nth-child(4) h4::before { content: '📍'; }
+        .step:nth-child(5) h4::before { content: '🧠'; }
+
+        .step ul {
+            margin: 10px 0 10px 20px;
+        }
+
+        .step li {
+            margin: 5px 0;
+            color: #333;
+        }
+
+        code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #e83e8c;
+            font-weight: bold;
+        }
+
+        .example {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .example:last-child {
+            border-bottom: none;
+        }
+
+        .example-plate {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #1e3c72;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 249, 250, 0.9));
+            padding: 8px 15px;
+            border-radius: 8px;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+            position: relative;
+        }
+
+        .example-plate::before {
+            content: '🚗';
+            position: absolute;
+            left: -25px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.9em;
+        }
+
+        .example-sequence {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .error {
+            color: #dc3545;
+            font-weight: 600;
+        }
+
+        .character-table {
+            margin-top: 15px;
+        }
+
+        .character-table h5 {
+            color: #1e3c72;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .character-table h5::before {
+            content: '📋';
+            font-size: 1.2em;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 249, 250, 0.95));
+            font-size: 0.9em;
+        }
+
+        table thead {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        table th {
+            padding: 12px;
+            text-align: center;
+            font-weight: 600;
+            color: white;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        table td {
+            padding: 10px 12px;
+            text-align: center;
+            border-bottom: 1px solid rgba(102, 126, 234, 0.1);
+        }
+
+        table td:nth-child(odd) {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            font-weight: bold;
+            color: #1e3c72;
+        }
+
+        table td:nth-child(even) {
+            color: #555;
+            font-weight: 500;
+        }
+
+        table tr:hover {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
+            transform: scale(1.01);
+            transition: all 0.2s ease;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            input[type="text"] {
+                font-size: 1.3em;
+                padding: 12px 15px;
+            }
+            
+            .result {
+                font-size: 1.5em;
+            }
+            
+            .sequence-number {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating Mathematical Symbols -->
+    <div class="floating-symbols">
+        <!-- Floating symbols that move upward -->
+        <div class="math-symbol">∑</div>
+        <div class="math-symbol">∫</div>
+        <div class="math-symbol">∂</div>
+        <div class="math-symbol">∞</div>
+        <div class="math-symbol">π</div>
+        <div class="math-symbol">α</div>
+        <div class="math-symbol">β</div>
+        <div class="math-symbol">γ</div>
+        <div class="math-symbol">δ</div>
+        <div class="math-symbol">λ</div>
+        <div class="math-symbol">μ</div>
+        <div class="math-symbol">σ</div>
+        <div class="math-symbol">φ</div>
+        <div class="math-symbol">ψ</div>
+        <div class="math-symbol">Ω</div>
+        
+        <!-- Static pulsing symbols -->
+        <div class="math-symbol-static">√</div>
+        <div class="math-symbol-static">∆</div>
+        <div class="math-symbol-static">∇</div>
+        <div class="math-symbol-static">≈</div>
+        <div class="math-symbol-static">≡</div>
+    </div>
+
+    <div class="container">
+        <h1>Car Number Plate Sequence Generator</h1>
+        <p class="subtitle">Enter any number plate to find its sequence number in the A-Z, 0-9 system</p>
+        
+        <div class="input-section">
+            <label for="plateInput">Number Plate:</label>
+            <input type="text" id="plateInput" placeholder="Enter plate (e.g., ABC123)" maxlength="10">
+        </div>
+        
+        <div class="result-section">
+            <div class="result" id="result">
+                Enter a plate above to see its sequence number
+            </div>
+        </div>
+        
+        <div class="examples">
+            <h3>📋 Examples</h3>
+            <div class="example">
+                <span class="example-plate">0</span>
+                <span class="example-sequence">Sequence: 1</span>
+            </div>
+            <div class="example">
+                <span class="example-plate">Z</span>
+                <span class="example-sequence">Sequence: 36</span>
+            </div>
+            <div class="example">
+                <span class="example-plate">10</span>
+                <span class="example-sequence">Sequence: 37</span>
+            </div>
+            <div class="example">
+                <span class="example-plate">ABC</span>
+                <span class="example-sequence">Sequence: 13,369</span>
+            </div>
+            <div class="example">
+                <span class="example-plate">ABC123</span>
+                <span class="example-sequence">Sequence: 481,229,879</span>
+            </div>
+        </div>
+        
+        <div class="explanation">
+            <h3>🧮 How Does It Work?</h3>
+            <p><strong>Great question! Let me explain it in a simple way:</strong></p>
+            
+            <div class="step">
+                <h4>Step 1: Our Special Alphabet</h4>
+                <p>We use 36 characters in a special order: <code>0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ</code></p>
+                <p>Think of it like counting, but instead of just 0-9, we keep going with A, B, C... all the way to Z!</p>
+                
+                <div class="character-table">
+                    <h5>Character Position Reference:</h5>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Character</th>
+                                    <th>Position</th>
+                                    <th>Character</th>
+                                    <th>Position</th>
+                                    <th>Character</th>
+                                    <th>Position</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>0</td><td>0</td><td>C</td><td>12</td><td>O</td><td>24</td></tr>
+                                <tr><td>1</td><td>1</td><td>D</td><td>13</td><td>P</td><td>25</td></tr>
+                                <tr><td>2</td><td>2</td><td>E</td><td>14</td><td>Q</td><td>26</td></tr>
+                                <tr><td>3</td><td>3</td><td>F</td><td>15</td><td>R</td><td>27</td></tr>
+                                <tr><td>4</td><td>4</td><td>G</td><td>16</td><td>S</td><td>28</td></tr>
+                                <tr><td>5</td><td>5</td><td>H</td><td>17</td><td>T</td><td>29</td></tr>
+                                <tr><td>6</td><td>6</td><td>I</td><td>18</td><td>U</td><td>30</td></tr>
+                                <tr><td>7</td><td>7</td><td>J</td><td>19</td><td>V</td><td>31</td></tr>
+                                <tr><td>8</td><td>8</td><td>K</td><td>20</td><td>W</td><td>32</td></tr>
+                                <tr><td>9</td><td>9</td><td>L</td><td>21</td><td>X</td><td>33</td></tr>
+                                <tr><td>A</td><td>10</td><td>M</td><td>22</td><td>Y</td><td>34</td></tr>
+                                <tr><td>B</td><td>11</td><td>N</td><td>23</td><td>Z</td><td>35</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="step">
+                <h4>Step 2: Counting Like a Computer</h4>
+                <p>Imagine you're counting toys, but you can only use 36 different symbols. When you run out of single symbols, you start using two symbols together (like 10, 11, 12... then 1A, 1B, 1C...).</p>
+            </div>
+            
+            <div class="step">
+                <h4>Step 3: Finding the Position</h4>
+                <p>Each number plate has a position in this giant list:</p>
+                <ul>
+                    <li><strong>Position 1:</strong> "0" (the first plate)</li>
+                    <li><strong>Position 2:</strong> "1" (the second plate)</li>
+                    <li><strong>Position 36:</strong> "Z" (the 36th plate)</li>
+                    <li><strong>Position 37:</strong> "10" (now we need two characters!)</li>
+                </ul>
+            </div>
+            
+            <div class="step">
+                <h4>Real Example: Plate "ABC"</h4>
+                <p>Let's work out "ABC" step by step:</p>
+                <ul>
+                    <li>A is the 10th character in our list (remember, we start counting from 0!)</li>
+                    <li>B is the 11th character</li>
+                    <li>C is the 12th character</li>
+                    <li>We calculate: (10 × 36 × 36) + (11 × 36) + 12 = 12,960 + 396 + 12 = 13,368</li>
+                    <li>Then we add some extra numbers for all the shorter plates that come before it</li>
+                    <li>Final answer: 16,926!</li>
+                </ul>
+            </div>
+            
+            <p><strong>Fun fact:</strong> This is similar to how we count in our normal number system, but instead of using 10 digits (0-9), we use 36 characters (0-9 and A-Z)!</p>
+        </div>
+    </div>
+
+    <script>
+        const plateInput = document.getElementById('plateInput');
+        const result = document.getElementById('result');
+
+        // Character set: 0-9, A-Z (36 characters total)
+        const charset = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+        function plateToSequence(plate) {
+            if (!plate) return 0;
+            
+            // Convert plate to uppercase and validate characters
+            plate = plate.toUpperCase();
+            for (let char of plate) {
+                if (!charset.includes(char)) {
+                    throw new Error(`Invalid character: ${char}`);
+                }
+            }
+            
+            let sequence = 0;
+            const base = charset.length; // 36
+            
+            // Calculate sequence number using standard base-36 arithmetic
+            for (let i = 0; i < plate.length; i++) {
+                const charIndex = charset.indexOf(plate[i]);
+                sequence = sequence * base + charIndex;
+            }
+            
+            // Add 1 to get sequence number (so "0" = sequence 1)
+            return sequence + 1;
+        }
+
+        function getCalculationSteps(plate) {
+            if (!plate) return '';
+            
+            plate = plate.toUpperCase();
+            const base = 36;
+            let steps = [];
+            
+            // Show character positions
+            let charPositions = [];
+            for (let i = 0; i < plate.length; i++) {
+                const char = plate[i];
+                const position = charset.indexOf(char);
+                charPositions.push(`${char}=${position}`);
+            }
+            steps.push(`Character positions: ${charPositions.join(', ')}`);
+            
+            // Show the main calculation
+            let calcParts = [];
+            let totalFromChars = 0;
+            for (let i = 0; i < plate.length; i++) {
+                const char = plate[i];
+                const position = charset.indexOf(char);
+                const power = plate.length - 1 - i;
+                const value = position * Math.pow(base, power);
+                totalFromChars += value;
+                
+                if (power === 0) {
+                    calcParts.push(`${position}`);
+                } else if (power === 1) {
+                    calcParts.push(`(${position} × 36)`);
+                } else {
+                    calcParts.push(`(${position} × 36^${power})`);
+                }
+            }
+            
+            calculation = calcParts.join(' + ');
+            steps.push(`Base-36 calculation: ${calculation} = ${totalFromChars.toLocaleString()}`);
+            steps.push(`Sequence number: ${totalFromChars.toLocaleString()} + 1 = ${(totalFromChars + 1).toLocaleString()}`);
+            
+            return steps;
+        }
+
+        function updateResult() {
+            const plate = plateInput.value.trim();
+            
+            if (!plate) {
+                result.innerHTML = 'Enter a plate above to see its sequence number';
+                return;
+            }
+            
+            try {
+                const sequence = plateToSequence(plate);
+                const steps = getCalculationSteps(plate);
+                
+                result.innerHTML = `
+                    Plate: <strong>${plate.toUpperCase()}</strong><br>
+                    <div class="sequence-number">${sequence.toLocaleString()}</div>
+                    <div class="calculation-steps">
+                        ${steps.map(step => `<div class="calc-step">${step}</div>`).join('')}
+                    </div>
+                `;
+            } catch (error) {
+                result.innerHTML = `<div class="error">${error.message}<br>Only A-Z and 0-9 characters allowed</div>`;
+            }
+        }
+
+        // Input validation - only allow A-Z and 0-9
+        plateInput.addEventListener('input', function(e) {
+            let value = e.target.value.toUpperCase();
+            value = value.replace(/[^A-Z0-9]/g, '');
+            e.target.value = value;
+            updateResult();
+        });
+
+        // Initial calculation
+        updateResult();
+    </script>
+</body>
+</html>
